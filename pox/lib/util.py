@@ -1,4 +1,4 @@
-# Copyright 2011,2012,2013 James McCauley
+dafi             Copyright 2011,2012,2013 James McCauley
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ Some of these are POX-specific, and some aren't.
 #TODO: Break into multiple modules?  (data structures, POX-specific, etc.)
 
 from __future__ import print_function
-
+    
 import traceback
 import struct
 import sys

@@ -77,6 +77,7 @@ class Source (EventMixin):
   def foo (self):
     # We can raise events as follows:
     component = "fake_pox_component"
+    ## 调用了raiseEvent
     self.raiseEvent(ComponentRegistered(component))
 
     # In the above invocation, the argument is an instance of
@@ -214,6 +215,7 @@ class EventMixin (object):
     self._eventMixin_init()
 
   def _eventMixin_init (self):
+    ## 设置了_eventMixin_events的特性和_eventMixin_handlers
     if not hasattr(self, "_eventMixin_events"):
       setattr(self, "_eventMixin_events", True)
     if not hasattr(self, "_eventMixin_handlers"):
@@ -228,6 +230,7 @@ class EventMixin (object):
     #TODO: this should really keep subsequent events executing and print
     #      the specific handler that failed...
     try:
+      ## 核心还是调用raiseEvent  
       return self.raiseEvent(event, *args, **kw)
     except:
       if handleEventException is not None:
@@ -243,6 +246,7 @@ class EventMixin (object):
     Returns the event object, unless it was never created (because there
     were no listeners) in which case returns None.
     """
+    ## handler的赋值语句
     self._eventMixin_init()
 
     classCall = False
@@ -272,12 +276,14 @@ class EventMixin (object):
 
     # Create a copy so that it can be modified freely during event
     # processing.  It might make sense to change this.
+    ## 将handler按eventType取出遍历
     handlers = self._eventMixin_handlers.get(eventType, [])
     for (priority, handler, once, eid) in handlers:
       if classCall:
         rv = event._invoke(handler, *args, **kw)
       else:
         rv = handler(event, *args, **kw)
+      ## 移除了监听器
       if once: self.removeListener(eid)
       if rv is None: continue
       if rv is False:
@@ -295,6 +301,7 @@ class EventMixin (object):
           if classCall: event.halt = True
           break
       #if classCall and hasattr(event, "halt") and event.halt:
+      ## 如果有halt则停止标记event.halt退出循环，事件处理队列停止
       if classCall and event.halt:
         break
     return event
@@ -418,6 +425,8 @@ class EventMixin (object):
       if fail:
         raise RuntimeError("Event %s not defined on object of type %s"
                            % (eventType, type(self)))
+    
+    ## 初始化未注册的handlers
     if eventType not in self._eventMixin_handlers:
       # if no handlers are already registered, initialize
       handlers = self._eventMixin_handlers[eventType] = []
@@ -431,11 +440,13 @@ class EventMixin (object):
 
     entry = (priority, handler, once, eid)
 
+    ## 将带有handler和事件ID(eid)等信息的entry添加到handlers队列中，priority决定这个handlers在处理时的优先级
     handlers.append(entry)
     if priority is not None:
       # If priority is specified, sort the event handlers
       handlers.sort(reverse = True, key = operator.itemgetter(0))
 
+    ## 返回事件类型和时间ID
     return (eventType,eid)
 
   def listenTo (self, source, *args, **kv):
@@ -447,6 +458,7 @@ class EventMixin (object):
 
     See also: addListeners(), autoBindEvents()
     """
+    ## 订阅事件以及将handle方法绑定到事件
     return autoBindEvents(self, source, *args, **kv)
 
   def addListeners (self, sink, prefix='', weak=False, priority=None):
@@ -489,13 +501,15 @@ def autoBindEvents (sink, source, prefix='', weak=False, priority=None):
 
   Returns the added listener IDs (so that you can remove them later).
   """
+  ## 是否有前缀
   if len(prefix) > 0 and prefix[0] != '_': prefix = '_' + prefix
   if hasattr(source, '_eventMixin_events') is False:
     # If source does not declare that it raises any events, do nothing
     print("Warning: source class %s doesn't specify any events!" % (
           source.__class__.__name__,))
     return []
-
+  
+  ## 字典于保存事件
   events = {}
   for e in source._eventMixin_events:
     if type(e) == str:
@@ -503,21 +517,25 @@ def autoBindEvents (sink, source, prefix='', weak=False, priority=None):
     else:
       events[e.__name__] = e
 
+  ## 列表用于保存事件处理的函数句柄
   listeners = []
   # for each method in sink
+  ## 从sink组件中取出所有函数
   for m in dir(sink):
     # get the method object
     a = getattr(sink, m)
     if callable(a):
       # if it has the revent prefix signature,
+      ## 找到所有_handle开头的函数和事件名
       if m.startswith("_handle" + prefix + "_"):
         event = m[8+len(prefix):]
         # and it is one of the events our source triggers
         if event in events:
           # append the listener
+          ## 调用addListener()将事件处理函数存放在src
           listeners.append(source.addListener(events[event], a, weak=weak,
                                               priority=priority))
-          #print("autoBind: ",source,m,"to",sink)
+          # print("autoBind: ",source,m,"to",sink)
         elif len(prefix) > 0 and "_" not in event:
           print("Warning: %s found in %s, but %s not raised by %s" %
                 (m, sink.__class__.__name__, event,

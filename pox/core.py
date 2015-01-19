@@ -8,6 +8,7 @@
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
+
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
@@ -370,12 +371,17 @@ class POXCore (EventMixin):
     core.registerNew(FooClass, arg) is roughly equivalent to
     core.register("FooClass", FooClass(arg)).
     """
+    ## 得到类名
     name = __componentClass.__name__
+    ## 申请实例
     obj = __componentClass(*args, **kw)
+    ## 处理重名的组件
     if hasattr(obj, '_core_name'):
       # Default overridden
       name = obj._core_name
+    ## 注册
     self.register(name, obj)
+    ## 返回实例
     return obj
 
   def register (self, name, component=None):
@@ -396,7 +402,9 @@ class POXCore (EventMixin):
     if name in self.components:
       log.warn("Warning: Registered '%s' multipled times" % (name,))
     self.components[name] = component
+    ## 使用raiseEventNoErrors()函数raise了一个ComponentRegistered事件
     self.raiseEventNoErrors(ComponentRegistered, name, component)
+    ## 挂起组件，等待调用回调函数
     self._try_waiters()
 
   def call_when_ready (self, callback, components=[], name=None, args=(),

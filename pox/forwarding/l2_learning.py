@@ -81,8 +81,8 @@ class LearningSwitch (object):
     # Our table
     self.macToPort = {}
 
-    # We want to hear PacketIn messages, so we listen
-    # to the connection
+    # We want to hear PacketIn messages, so we listen to the connection
+    ## 调用的是addListeners()函数
     connection.addListeners(self)
 
     # We just use this to know when to log a helpful message
@@ -197,5 +197,6 @@ def launch (transparent=False, hold_down=_flood_delay):
     assert _flood_delay >= 0
   except:
     raise RuntimeError("Expected hold-down to be a number")
-
+  
+  ## key function 
   core.registerNew(l2_learning, str_to_bool(transparent))

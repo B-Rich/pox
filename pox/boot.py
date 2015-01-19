@@ -133,7 +133,7 @@ def _do_import (name):
 
   return do_import2(name, ["pox." + name, name])
 
-
+## 导入组件
 def _do_imports (components):
   """
   Import each of the listed components
@@ -154,7 +154,9 @@ def _do_imports (components):
 
 
 def _do_launch (argv):
+  ## 创建用于存放组件的名称，然后再启动，初始化
   component_order = []
+  ## 
   components = {}
 
   curargs = {}
@@ -165,6 +167,7 @@ def _do_launch (argv):
       if arg not in components:
         components[arg] = []
       curargs = {}
+      ## 加入命令行参数中的组件
       components[arg].append(curargs)
       component_order.append(arg)
     else:
@@ -173,13 +176,16 @@ def _do_launch (argv):
       if len(arg) == 1: arg.append(True)
       curargs[arg[0]] = arg[1]
 
+  ## 处理pox选项，预启动
   _options.process_options(pox_options)
   _pre_startup()
+  
   modules = _do_imports(n.split(':')[0] for n in component_order)
   if modules is False:
     return False
 
   inst = {}
+  ## 遍历组件列表，决定启动顺序
   for name in component_order:
     cname = name
     inst[name] = inst.get(name, -1) + 1
@@ -207,6 +213,8 @@ def _do_launch (argv):
               # Leave it as a string
               pass
 
+      ## 预处理组件
+      ## 例如：获得组件的启动函数，代码中的f，就是组件的启动函数指针，还完成一些测试工作：判断启动函数的代码行数是否大于0等。
       multi = False
       if f.func_code.co_argcount > 0:
         #FIXME: This code doesn't look quite right to me and may be broken
@@ -231,6 +239,7 @@ def _do_launch (argv):
         print(name, "does not accept multiple instances")
         return False
 
+      ## 启动组件，**参数表示传入的是字典，将key和value值都传了进来
       try:
         if f(**params) is False:
           # Abort startup
@@ -480,6 +489,7 @@ def boot (argv = None):
   """
 
   # Add pox directory to path
+  ## 添加pox ext到系统路径
   base = sys.path[0]
   sys.path.insert(0, os.path.abspath(os.path.join(base, 'pox')))
   sys.path.insert(0, os.path.abspath(os.path.join(base, 'ext')))

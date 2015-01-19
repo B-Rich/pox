@@ -110,6 +110,7 @@ class l3_switch (EventMixin):
     # This timer handles expiring stuff
     self._expire_timer = Timer(5, self._handle_expiration, recurring=True)
 
+    ## 监听函数
     self.listenTo(core)
 
   def _handle_expiration (self):
